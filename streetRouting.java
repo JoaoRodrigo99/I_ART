@@ -38,8 +38,8 @@ class streetRouting {
         // 
         for(Junction j : junctions)
             j.print();
-        for(Street s : streets)
-            s.print();
+        // for(Street s : streets)
+        //     s.print();
         System.out.println("totalJunctions : " + totalJunctions);
         System.out.println("totalStreets : " + totalStreets);
         System.out.println("totalTime : " + totalTime);
@@ -56,9 +56,11 @@ class streetRouting {
             for(Car c : cars){
                 Street bestStreet = c.junction.getStreets().get(0);
                 for (Street s : c.junction.getStreets()){
-                    
                     if(!s.isVisited()){
-                        c.junction = s.getJ(2);
+                        if(s.getJ(1) == c.junction)
+                            c.junction = s.getJ(2);
+                        else 
+                            c.junction = s.getJ(1);
                         totalTime -= s.getTime();
                         travelDist += s.getDist();
                         s.setVisited();
@@ -68,7 +70,13 @@ class streetRouting {
                         if((s.getDist()/s.getTime()) > (bestStreet.getDist()/bestStreet.getTime()))
                             bestStreet = s;
                             totalTime -= s.getTime();
-                            c.junction = bestStreet.getJ(2);
+                            
+                        if(s == c.junction.getStreets().get(c.junction.getStreets().size() - 1)){
+                            if(bestStreet.getJ(1) == c.junction)
+                                c.junction = bestStreet.getJ(2);
+                            else 
+                                c.junction = bestStreet.getJ(1);
+                        }
                     }
                     
                     
@@ -81,6 +89,10 @@ class streetRouting {
         for(Car c : cars)
             System.out.println(c.path);
         System.out.println(travelDist);
+
+        System.out.println(junctions.get(1).getStreets().size());
+
+        writeOutput("output.txt");
 
     }
 
@@ -97,9 +109,22 @@ public static void writeOutput(String fileName)   {
 
 
     try {
-        FileWriter myWriter = new FileWriter("output.txt", true);
+        FileWriter myWriter = new FileWriter("output.txt", false);
         BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
         // bufferedWriter.write(this.getGame().getArena().getJogador().getName() + " " + this.getGame().getArena().getJogador().getScore() + "\n");
+        // int totalLinestoWrite = 1;
+        // for(Car c : cars){
+        //     totalLinestoWrite += c.path.length() - 1;
+        // }
+        bufferedWriter.write(cars.size() + "\n");
+        // while(totalLinestoWrite >= 0){
+            for(Car c : cars){
+                bufferedWriter.write(c.numberJunctions() + "\n");
+                for(int i = 0; i < c.path.length(); i++){
+                    bufferedWriter.write(c.path.charAt(i) + "\n");
+                }
+            }
+
         bufferedWriter.close();
 
         System.out.println("Successfully wrote to the file.");
