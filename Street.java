@@ -1,5 +1,5 @@
 public class Street {
-    
+
 
     private Junction junction1, junction2;
     private int distance;
@@ -7,43 +7,45 @@ public class Street {
     private int direction;
     private boolean visited;
 
-    public Street(Junction j1, Junction j2, int direc, int tim, int dist) {
-        this.junction1 = j1;
-        this.junction2 = j2;
-        this.direction = direc;
-        this.time = tim;
-        this.distance = dist;
+    public Street(Junction junction1, Junction junction2, int direction, int time, int distance) {
+        this.junction1 = junction1;
+        this.junction2 = junction2;
+        this.direction = direction;
+        this.time = time;
+        this.distance = distance;
 
     }
 
-    public void setVisited(){
+    public void setVisited() {
         visited = true;
     }
 
-    public boolean isVisited(){
+    public boolean isVisited() {
         return visited;
     }
 
-    public int getDirec(){
+    public int getDirection() {
         return direction;
     }
 
-    public int getTime(){
+    public int getTime() {
         return time;
     }
 
-    public int getDist(){
+    public int getDistance() {
         return distance;
     }
 
-    public Junction getJ(int n){
-        if(n == 1)
-            return junction1;
-        else if(n == 2)
-            return junction2;
-        else 
-            System.out.println("Error getting juntion (Street)");
-            return null;
+    public Junction getJunction(int n) {
+        switch (n) {
+            case 1:
+                return junction1;
+            case 2:
+                return junction2;
+            default:
+                System.out.println("Error getting juntion (Street)");
+                return null;
+        }
     }
 
     public void print() {
@@ -52,6 +54,6 @@ public class Street {
         System.out.println("distance : " + distance);
         System.out.println("time : " + time);
         System.out.println("direction : " + direction);
-    
+
     }
 }

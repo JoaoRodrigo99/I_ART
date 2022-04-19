@@ -2,21 +2,21 @@ import java.util.ArrayList;
 
 public class Junction {
 
-    private double x, y;
-    private ArrayList<Street> streets;
+    private final double x;
+    private final double y;
+    private final ArrayList<Street> streets;
 
-    public Junction(double coordx, double coordy)   {
-        streets = new ArrayList<Street>();
-        streets.clear();
-        this.x = coordx;
-        this.y = coordy;
+    public Junction(double x, double y) {
+        streets = new ArrayList<>();
+        this.x = x;
+        this.y = y;
     }
 
-    public void addStreet(Street s)  {
+    public void addStreet(Street s) {
         streets.add(s);
     }
 
-    public ArrayList<Street> getStreets(){
+    public ArrayList<Street> getStreets() {
         return streets;
     }
 
@@ -24,18 +24,17 @@ public class Junction {
         System.out.println("X : " + x);
         System.out.println("Y : " + y);
         System.out.println("StreetSIze: " + streets.size());
-        for(Street s : streets)
+        for (Street s : streets)
             s.print();
     }
 
-    public double getX()    {
+    public double getX() {
         return x;
     }
 
-    public double getY()    {
+    public double getY() {
         return y;
     }
 
 
-    
 }

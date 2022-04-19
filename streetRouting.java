@@ -3,187 +3,140 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-// package com.aor.numbers;
-
-// import java.lang.reflect.Array;
-// import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-// import java.util.Scanner;
-
-// import javax.swing.SingleSelectionModel;
-
 class streetRouting {
 
-    private static ArrayList<Junction> junctions = new ArrayList<Junction>();
-    private static ArrayList<Street> streets = new ArrayList<Street>();
-    private static ArrayList<Car> cars = new ArrayList<Car>();
+    private static final ArrayList<Junction> junctions = new ArrayList<>();
+    private static final ArrayList<Street> streets = new ArrayList<>();
+    private static final ArrayList<Car> fleet = new ArrayList<>();
     private static int totalJunctions;
     private static int totalStreets;
     private static int totalTime, totalCars;
-    private static int initJunc;
-    private static int travelDist;
+    private static int initJunction;
+    private static int distanceTravelled;
 
 
     public static void main(String[] args) throws IOException {
 
+        // Initializes config variables
         readInput("input.txt");
-        setJunctionStreets(); //Seperate function to establish streets for each juntion since there are unidirectional streets
-  
-        
-        // 
-        for(Junction j : junctions)
-            j.print();
-        // for(Street s : streets)
-        //     s.print();
+
+        // Separate function to establish streets for each junction since there are unidirectional streets
+        setJunctionStreets();
+
+        for (Junction j : junctions) j.print();
         System.out.println("totalJunctions : " + totalJunctions);
         System.out.println("totalStreets : " + totalStreets);
         System.out.println("totalTime : " + totalTime);
         System.out.println("totalCars : " + totalCars);
-        System.out.println("initJunc : " + initJunc);
+        System.out.println("initJunction : " + initJunction);
 
-        for(int i = 0; i < totalCars; i++){
-            cars.add(new Car(junctions.get(initJunc)));
+        // Initializes all cars paths to their starting position
+        for (int i = 0; i < totalCars; ++i) {
+            Car currentCar = new Car(junctions.get(initJunction));
+            currentCar.path += Integer.toString(initJunction);
+            fleet.add(currentCar);
         }
-        for(Car c : cars)
-            c.path += Integer.toString(initJunc);
-        
-        while(totalTime > 0){
-            for(Car c : cars){
-                Street bestStreet = c.junction.getStreets().get(0);
-                for (Street s : c.junction.getStreets()){
-                    if(!s.isVisited()){
-                        if(s.getJ(1) == c.junction)
-                            c.junction = s.getJ(2);
-                        else 
-                            c.junction = s.getJ(1);
-                        totalTime -= s.getTime();
-                        travelDist += s.getDist();
-                        s.setVisited();
+
+        // While we've got time
+        while (totalTime > 0) {
+            for (Car car : fleet) {
+                // Arbitrarily init the best available street to go through as the first one
+                Street bestStreet = car.junction.getStreets().get(0);
+
+                // Look through all streets available at the current junction
+                for (Street possibleStreet : car.junction.getStreets()) {
+                    /* Each street connects to 2 different junctions
+                    *  If this street is not visited already then break out of the loop, and take it!
+                    *  Otherwise, let's find out which one amongst the already visited is the best */
+                    if (!possibleStreet.isVisited()) {
+                        bestStreet = possibleStreet;
                         break;
+                    } else {
+                        if ((possibleStreet.getDistance() / possibleStreet.getTime()) > (bestStreet.getDistance() / bestStreet.getTime()))
+                            bestStreet = possibleStreet;
                     }
-                    else{
-                        if((s.getDist()/s.getTime()) > (bestStreet.getDist()/bestStreet.getTime()))
-                            bestStreet = s;
-                            totalTime -= s.getTime();
-                            
-                        if(s == c.junction.getStreets().get(c.junction.getStreets().size() - 1)){
-                            if(bestStreet.getJ(1) == c.junction)
-                                c.junction = bestStreet.getJ(2);
-                            else 
-                                c.junction = bestStreet.getJ(1);
-                        }
-                    }
-                    
-                    
                 }
-                
-                c.path += Integer.toString(junctions.indexOf(c.junction));
+
+                // If the best available street wasn't visited already, then add to the distance travelled
+                // Set street to visited too
+                if (!bestStreet.isVisited()) {
+                    distanceTravelled += bestStreet.getDistance();
+                    bestStreet.setVisited();
+                }
+
+                // If current car is located at junction 1, we should go to junction 2
+                // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
+                car.junction = bestStreet.getJunction(1) == car.junction ?
+                        bestStreet.getJunction(2) :
+                        bestStreet.getJunction(1);
+                car.path += Integer.toString(junctions.indexOf(car.junction));
+                totalTime -= bestStreet.getTime();
             }
         }
 
-        for(Car c : cars)
-            System.out.println(c.path);
-        System.out.println(travelDist);
+        for (Car car : fleet) System.out.println(car.path);
 
+        System.out.println(distanceTravelled);
         System.out.println(junctions.get(1).getStreets().size());
 
         writeOutput("output.txt");
-
     }
 
+    public static void writeOutput(String fileName) {
+        try {
+            FileWriter myWriter = new FileWriter("output.txt", false);
+            BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
 
-
-public static void writeOutput(String fileName)   {
-    // 2 //Twocarsinthefleet.
-    // 1 //Firstcarstaysattheinitialjunction:
-    // 0 //-theinitialjunction
-    // 3 //Secondcarvisits3junctions:
-    // 0 //-theinitialjunction
-    // 1 //-thecarmovesfromjunction0tojunction1
-    // 2 //-thecarmovesfromjunction1tojunction2
-
-
-    try {
-        FileWriter myWriter = new FileWriter("output.txt", false);
-        BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
-        // bufferedWriter.write(this.getGame().getArena().getJogador().getName() + " " + this.getGame().getArena().getJogador().getScore() + "\n");
-        // int totalLinestoWrite = 1;
-        // for(Car c : cars){
-        //     totalLinestoWrite += c.path.length() - 1;
-        // }
-        bufferedWriter.write(cars.size() + "\n");
-        // while(totalLinestoWrite >= 0){
-            for(Car c : cars){
+            bufferedWriter.write(fleet.size() + "\n");
+            for (Car c : fleet) {
                 bufferedWriter.write(c.numberJunctions() + "\n");
-                for(int i = 0; i < c.path.length(); i++){
+                for (int i = 0; i < c.path.length(); i++) {
                     bufferedWriter.write(c.path.charAt(i) + "\n");
                 }
             }
 
-        bufferedWriter.close();
+            bufferedWriter.close();
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
 
-        System.out.println("Successfully wrote to the file.");
-    } catch (IOException e) {
-        System.out.println("An error occurred.");
-        e.printStackTrace();
     }
-
-    }
-
 
     public static void readInput(String fileName) {
-        
+
         try {
             File myObj = new File("input.txt");
             Scanner myReader = new Scanner(myObj);
-            // 3 2 3000 2 0      |3 junctions, 2 streets, 3000 seconds, 2 cars , starting at 0
+
             String data = myReader.nextLine();
             String[] config = data.split(" ");
             totalJunctions = Integer.parseInt(config[0]);
             totalStreets = Integer.parseInt(config[1]);
             totalTime = Integer.parseInt(config[2]);
             totalCars = Integer.parseInt(config[3]);
-            initJunc =Integer.parseInt(config[4]);
+            initJunction = Integer.parseInt(config[4]);
 
             int cycleCount = 1;
-
             while (myReader.hasNextLine()) {
-
                 data = myReader.nextLine();
-                // System.out.println(cycleCount);
-                // System.out.println(totalJunctions);
-                if(cycleCount <= totalJunctions){
-                    String[] juncStr = data.split(" ");
-                    Junction auxJunction = new Junction(Double.parseDouble(juncStr[0]) , Double.parseDouble(juncStr[0]));
-                    junctions.add(auxJunction);
-
-                }
-                else {
-                // System.out.println(data);
-                //For Streets
-                String[] streetStr = data.split(" ");
-                // System.out.println(streetStr[0]);
-                Street auxStreet = new Street(junctions.get(Integer.parseInt(streetStr[0])), junctions.get(Integer.parseInt(streetStr[1])),
-                                                Integer.parseInt(streetStr[2]), Integer.parseInt(streetStr[3]), Integer.parseInt(streetStr[4]));
-                streets.add(auxStreet);
-                // for(Street s : streets)
-                // s.print();
+                if (cycleCount <= totalJunctions) {
+                    String[] junctionStr = data.split(" ");
+                    junctions.add(new Junction(Double.parseDouble(junctionStr[0]), Double.parseDouble(junctionStr[1])));
+                } else {
+                    String[] streetStr = data.split(" ");
+                    streets.add(new Street(junctions.get(Integer.parseInt(streetStr[0])), junctions.get(Integer.parseInt(streetStr[1])), Integer.parseInt(streetStr[2]), Integer.parseInt(streetStr[3]), Integer.parseInt(streetStr[4])));
                 }
 
-                // 48.8582  2.2945    //Coordinates of the first junction.
-                // 50.0 3.09            //Coordinates of the second junction.
-                // 51.424242 3.02    //Coordinates of the third junction.
-                // 0 1 1 30 250     //Street from first junction to second junction.
-                // 1 2 2 45 200     //Street from second junction to third junction.
-
-                cycleCount++;
+                ++cycleCount;
             }
+
             myReader.close();
+
         } catch (FileNotFoundException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
@@ -193,20 +146,15 @@ public static void writeOutput(String fileName)   {
 
     public static void setJunctionStreets() {
 
-        for(Junction j : junctions){
-            for(Street s : streets){
-                // System.out.println("cycle");
-                // s.print();
-                
-                //If direction == 1 streets are unidirectional
-                if(s.getJ(1).getX() == j.getX() && s.getJ(1).getY() == j.getY() && s.getDirec() == 2)
+        for (Junction j : junctions) {
+            for (Street s : streets) {
+                // If direction == 1 streets are unidirectional
+                if (s.getJunction(1).getX() == j.getX() && s.getJunction(1).getY() == j.getY() && s.getDirection() == 2)
                     j.addStreet(s);
-                else if(s.getJ(1).getX() == j.getX() && s.getJ(1).getY() == j.getY() && s.getDirec() == 1)
+                else if (s.getJunction(1).getX() == j.getX() && s.getJunction(1).getY() == j.getY() && s.getDirection() == 1)
                     j.addStreet(s);
-                else if(s.getJ(2).getX() == j.getX() && s.getJ(2).getY() == j.getY() && s.getDirec() == 2)
+                else if (s.getJunction(2).getX() == j.getX() && s.getJunction(2).getY() == j.getY() && s.getDirection() == 2)
                     j.addStreet(s);
-                // else System.out.println("failing");
-
             }
         }
 
