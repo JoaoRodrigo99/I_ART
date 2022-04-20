@@ -1,11 +1,30 @@
-public class Street {
+import java.util.ArrayList;
 
+public class Street {
+    public class visitInfo {
+        private int time;
+        private int carID;
+        public visitInfo(int carID, int time) {
+            super();
+            this.carID = carID;
+            this.time = time;
+        }
+
+        public int getTime() {
+            return time;
+        }
+
+        public int getCarID() {
+            return carID;
+        }
+    }
 
     private Junction junction1, junction2;
     private int distance;
     private int time;
     private int direction;
     private boolean visited;
+    private ArrayList<visitInfo> visitedTimes = new ArrayList<>();
 
     public Street(Junction junction1, Junction junction2, int direction, int time, int distance) {
         this.junction1 = junction1;
@@ -16,8 +35,13 @@ public class Street {
 
     }
 
-    public void setVisited() {
+    public void setVisited(int carID, int timeOfVisit) {
         visited = true;
+        visitedTimes.add(new visitInfo(carID, timeOfVisit));
+    }
+
+    public ArrayList<visitInfo> getVisitedTimes() {
+        return visitedTimes;
     }
 
     public boolean isVisited() {

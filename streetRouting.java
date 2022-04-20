@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 class streetRouting {
@@ -40,32 +41,22 @@ class streetRouting {
             fleet.add(currentCar);
         }
 
-        // While we've got time
-        while (totalTime > 0) {
+        // Do paths for all cars independently
+        boolean probe = false;
+        int delta = totalTime;
+        Random randomGenerator = new Random();
+        do {
             for (Car car : fleet) {
-                // Arbitrarily init the best available street to go through as the first one
-                Street bestStreet = car.junction.getStreets().get(0);
+                // Arbitrarily init the best available street to go through
+                ArrayList<Street> availableStreets = car.junction.getStreets();
+                Street bestStreet = availableStreets.get(randomGenerator.nextInt(availableStreets.size()));
 
-                // Look through all streets available at the current junction
-                for (Street possibleStreet : car.junction.getStreets()) {
-                    /* Each street connects to 2 different junctions
-                    *  If this street is not visited already then break out of the loop, and take it!
-                    *  Otherwise, let's find out which one amongst the already visited is the best */
-                    if (!possibleStreet.isVisited()) {
-                        bestStreet = possibleStreet;
-                        break;
-                    } else {
-                        if ((possibleStreet.getDistance() / possibleStreet.getTime()) > (bestStreet.getDistance() / bestStreet.getTime()))
-                            bestStreet = possibleStreet;
-                    }
-                }
+                // Stop if time's up
+                delta -= bestStreet.getTime();
+                if (delta <= 0) break;
 
-                // If the best available street wasn't visited already, then add to the distance travelled
-                // Set street to visited too
-                if (!bestStreet.isVisited()) {
-                    distanceTravelled += bestStreet.getDistance();
-                    bestStreet.setVisited();
-                }
+                // Set to visited and update when this car passed through this street
+                bestStreet.setVisited(fleet.indexOf(car), delta);
 
                 // If current car is located at junction 1, we should go to junction 2
                 // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
@@ -73,11 +64,14 @@ class streetRouting {
                         bestStreet.getJunction(2) :
                         bestStreet.getJunction(1);
                 car.path += Integer.toString(junctions.indexOf(car.junction));
-                totalTime -= bestStreet.getTime();
+
+                probe = car.equals(fleet.get(fleet.size() - 1));
             }
-        }
+
+        } while (!probe);
 
         for (Car car : fleet) System.out.println(car.path);
+        for (Street street : streets) distanceTravelled += street.isVisited() ? street.getDistance() : 0;
 
         System.out.println(distanceTravelled);
         System.out.println(junctions.get(1).getStreets().size());
