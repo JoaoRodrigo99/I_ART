@@ -40,6 +40,11 @@ public class Street {
         visitedTimes.add(new visitInfo(carID, timeOfVisit));
     }
 
+    public void unVisit() {
+        visited = false;
+        visitedTimes.clear();;
+    }
+
     public ArrayList<visitInfo> getVisitedTimes() {
         return visitedTimes;
     }

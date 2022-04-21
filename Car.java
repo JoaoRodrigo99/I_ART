@@ -32,4 +32,7 @@ public class Car {
         path2 = auxP;
     }
 
+    public void setJunction(Junction junc2Set){
+        junction = junc2Set;
+    }
 }
