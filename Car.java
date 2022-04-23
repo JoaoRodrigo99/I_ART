@@ -35,4 +35,8 @@ public class Car {
     public void setJunction(Junction junc2Set){
         junction = junc2Set;
     }
+
+    public Junction getJunction(){
+        return this.junction;
+    }
 }
