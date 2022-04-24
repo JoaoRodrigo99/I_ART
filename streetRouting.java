@@ -142,8 +142,8 @@ class streetRouting {
             System.out.println("distance traveled : " + distanceTravelled);
 
             writeOutput("output.txt");
-            writeGraphDat("graph.dat");
-            writePathsDat("path");
+            writeGraphDat("paths/graph.dat");
+            writePathsDat("paths/path");
 
             System.out.println("Press Enter key to continue...");
             terminalInput.readLine();
@@ -164,7 +164,7 @@ class streetRouting {
     }
 
     @SuppressWarnings("unchecked")
-    public static void SimulatedAnnealing() {
+    public static void SimulatedAnnealing() throws IOException {
 
         //Reset temperatures.txt if exists
         ResetTempFile("temperatures.txt");
@@ -262,8 +262,8 @@ class streetRouting {
                 // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
                 auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ? bestStreet.getJunction(2) : bestStreet.getJunction(1);
 
-
                 auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
+                writeCurrentPath(auxCar, car2Choose, auxCar.path2.size() - 2);
             }
 
             // Check for which streets were visited
@@ -861,11 +861,12 @@ class streetRouting {
                 BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
 
                 bufferedWriter.write("# " + i + "\n");
+                bufferedWriter.write("#x1 y1 x2 y2 id\n");
 
                 ArrayList<SubPath> sp = fleet.get(i).path2;
-                for (int j = 0; j < sp.size() / 2; j += 2) {
-                    bufferedWriter.write(junctions.get(sp.get(j).getJunction()).getX() + " " + junctions.get(sp.get(j).getJunction()).getY() + " " + sp.get(j).getJunction() + "\n");
-                    bufferedWriter.write(junctions.get(sp.get(j + 1).getJunction()).getX() + " " + junctions.get(sp.get(j + 1).getJunction()).getY() + " " + sp.get(j + 1).getJunction() + "\n");
+                for (int j = 0; j < sp.size() - 1; j += 2) {
+                    bufferedWriter.write(junctions.get(sp.get(j).getJunction()).getX() + " " + junctions.get(sp.get(j).getJunction()).getY() + " ");
+                    bufferedWriter.write(junctions.get(sp.get(j+1).getJunction()).getX() + " " + junctions.get(sp.get(j+1).getJunction()).getY() + " " + sp.get(j).getJunction() + " " + sp.get(j+1).getJunction() + "\n");
                 }
                 bufferedWriter.write("\n");
 
@@ -878,17 +879,42 @@ class streetRouting {
         }
     }
 
+    public static void writeCurrentPath(Car currentCar, int carNumber, int iterationNumber) {
+
+        try {
+            String filename = "paths/car" + carNumber + "/" + "iteration-" + iterationNumber;
+            FileWriter myWriter = new FileWriter(filename + ".dat", false);
+            BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
+            bufferedWriter.write("#x1 y1 x2 y2 id\n");
+
+            ArrayList<SubPath> sp = currentCar.path2;
+            for (int j = 0; j < sp.size() - 1; j += 1) {
+                if (j!=0 || j == sp.size() - 2) bufferedWriter.write("\n");
+                bufferedWriter.write(junctions.get(sp.get(j).getJunction()).getX() + " " + junctions.get(sp.get(j).getJunction()).getY() + " " + junctions.get(sp.get(j+1).getJunction()).getX() + " " + junctions.get(sp.get(j+1).getJunction()).getY() + " " + sp.get(j).getJunction() + " " + sp.get(j+1).getJunction());
+            }
+
+            bufferedWriter.close();
+            System.out.println("Successfully wrote to the data file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
     public static void writeGraphDat(String fileName) {
 
         try {
             FileWriter myWriter = new FileWriter(fileName, false);
             BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
-            int streetCounter = 0;
+            bufferedWriter.write("#x1 y1 x2 y2 id\n");
+
             for (Street street : streets) { //Print paths
-                bufferedWriter.write(street.getJunction(1).getX() + " " + street.getJunction(1).getY() + " " + streetCounter + "\n");
-                bufferedWriter.write(street.getJunction(2).getX() + " " + street.getJunction(2).getY() + " " + streetCounter + "\n");
-                //bufferedWriter.write("\n");
-                ++streetCounter;
+                if (street.getDirection() == 1)
+                    bufferedWriter.write(street.getJunction(1).getX() + " " + street.getJunction(1).getY() + " " + street.getJunction(2).getX() + " " + street.getJunction(2).getY() + " " + junctions.indexOf(street.getJunction(1)) + " " + junctions.indexOf(street.getJunction(2)) + "\n");
+                else {
+                    bufferedWriter.write(street.getJunction(1).getX() + " " + street.getJunction(1).getY() + " " + street.getJunction(2).getX() + " " + street.getJunction(2).getY() + " " + junctions.indexOf(street.getJunction(1)) + " " + junctions.indexOf(street.getJunction(2)) + "\n");
+                    bufferedWriter.write(street.getJunction(2).getX() + " " + street.getJunction(2).getY() + " " + street.getJunction(1).getX() + " " + street.getJunction(1).getY() + " " + junctions.indexOf(street.getJunction(2)) + " " + junctions.indexOf(street.getJunction(1)) + "\n");
+                }
             }
 
             bufferedWriter.close();
