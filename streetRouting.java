@@ -104,6 +104,7 @@ class streetRouting {
                 System.out.println("1. Random (Only 1 iteration - path randomly generated as starting point of every algorthim\n");
                 System.out.println("2. Simulated Annealing (Temperature = 60, cooling(per cycle) = -0.25\n");
                 System.out.println("3. Taboo Search \n");
+                System.out.println("4. Greedy aproach (only changes solution if it is better) \n"); //If it has failed to improve for 10 times breaks
                 System.out.println("q. Quit");
                 
                 BufferedReader terminalInput = new BufferedReader(new InputStreamReader(System.in));
@@ -111,7 +112,7 @@ class streetRouting {
                 //Validating input option
                 String input = terminalInput.readLine();
                 while(input.charAt(0) != '0' && input.charAt(0) != '1' && input.charAt(0) != '2' && input.charAt(0) != '3'
-                        && input.charAt(0) != 'q'){
+                && input.charAt(0) != '4' && input.charAt(0) != 'q'){
                     input = terminalInput.readLine();
                 }
 
@@ -132,6 +133,9 @@ class streetRouting {
                             break;
                         case 3:
                         TabooSearch();
+                            break;
+                        case 4:
+                        GreedyApproach();
                             break;
                     }
                 }
@@ -678,6 +682,168 @@ public static void TabooSearch(){
         return ret;
     }
 
+    ////////////////////
+
+    @SuppressWarnings("unchecked")
+    public static void GreedyApproach(){
+        
+
+        //Empty streets
+        ArrayList<Street> EmptyStreets = (ArrayList<Street>) streets.clone();
+
+        double numbertrys = 0; //Trys that failed to find a better path
+        
+        while(true)  {
+
+            //Creates copys of original solution
+            ArrayList<Junction> junctionsAux = new ArrayList<>();
+            ArrayList<Street> streetsAux = new ArrayList<>();
+            ArrayList<Car> fleetAux = new ArrayList<>();
+
+            for (Junction j : junctions) {
+                junctionsAux.add(j);
+            }
+            for (Street s : EmptyStreets) {
+                streetsAux.add(s);
+            }
+            for (Car c : fleet) {
+                fleetAux.add(c);
+            }
+
+
+            //Print Current path of choice
+            System.out.println("INITAL PATHS");
+            for (Car car : fleet) { //Print paths
+                System.out.println(fleet.indexOf(car) + ":");
+                for (SubPath sp : car.path2) {
+
+                    System.out.print("  (" + sp.getJunction() + ",");
+                    System.out.print(sp.getTimeL() + ") ");
+                }
+                System.out.println();
+
+            }
+            System.out.println("(Current) Distance Travalled : " + distanceTravelled);
+
+            for (Street s : streetsAux)
+                s.unVisit();
+
+            //Pick a random CAR 
+            int car2Choose = randomGenerator.nextInt(fleetAux.size());
+            Car auxCar = fleetAux.get(car2Choose);
+
+            //Pick a random JUNCTION
+            int junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+
+            //Checks if a change can be made in that junction, if not select another junction(the came after the randomly picked). If no junction can be changed, move to another car
+            while (true) {
+                if (junc2Choose > auxCar.path2.size() - 1) {
+                    car2Choose = randomGenerator.nextInt(fleetAux.size());
+                    auxCar = fleetAux.get(car2Choose);
+                    junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+                }
+
+                //If the junction has another street than car can go another way
+                if (junctionsAux.get(auxCar.path2.get(junc2Choose).getJunction()).getStreets().size() > 1) break;
+                else {
+                    junc2Choose++;
+                }
+            }
+
+
+            //Repor valores do Carro desde a junction escolhido, isto é cortar o path depois dessa junction
+            List<SubPath> tempPathAux = auxCar.path2.subList(0, junc2Choose);
+            ArrayList<SubPath> tempPath = new ArrayList<SubPath>();
+            for (SubPath sp : tempPathAux)
+                tempPath.add(sp);
+
+            //Print random choices
+            // System.out.println(auxCar);
+            // System.out.println("junc : " + junc2Choose);
+
+            //Set remaining time && and currentJunction 
+            if (junc2Choose > 0) {
+                auxCar.setTime(tempPath.get(tempPath.size() - 1).getTimeL());
+                auxCar.setJunction(junctionsAux.get(tempPath.get(tempPath.size() - 1).getJunction()));
+            } else {
+                auxCar.setTime(totalTime);
+                auxCar.setJunction(junctionsAux.get(0));
+            }
+
+            auxCar.setPath(tempPath);
+
+            //Form car new Path
+
+            while (auxCar.getTime() > 0) {
+                // Arbitrarily init the random available street to go through
+                ArrayList<Street> availableStreets = auxCar.junction.getStreets();
+                Street bestStreet = availableStreets.get(randomGenerator.nextInt(availableStreets.size()));
+
+                // Stop if time's up
+                if ((auxCar.getTime() - bestStreet.getTime()) < 0) break;
+
+                auxCar.reduceTime(bestStreet.getTime());
+
+                // If current car is located at junction 1, we should go to junction 2
+                // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
+                auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ? bestStreet.getJunction(2) : bestStreet.getJunction(1);
+
+
+                auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
+            }
+
+            //Check for which streets were visited
+            for (Car c : fleetAux) {
+                int prevJ = -1;
+                for (SubPath sp : c.path2) {
+                    if (prevJ == -1) prevJ = sp.getJunction();
+                    else {
+                        for (Street s : streetsAux) {
+                            if ((junctionsAux.indexOf(s.getJunction(1)) == prevJ) && (junctionsAux.indexOf((s.getJunction(2))) == sp.getJunction()))
+                                s.setVisited(fleetAux.indexOf(c), sp.getTimeL());
+                            else if ((junctionsAux.indexOf(s.getJunction(2)) == prevJ) && (junctionsAux.indexOf((s.getJunction(1))) == sp.getJunction()) && s.getDirection() == 2)
+                                s.setVisited(fleetAux.indexOf(c), sp.getTimeL());
+                        }
+                        prevJ = sp.getJunction();
+                    }
+
+                }
+            }
+
+            // System.out.println("Comparing cases\n");
+
+
+            //COMPARAR CASOS
+            int distanceTravelled2 = 0;
+            for (Street street : streetsAux) distanceTravelled2 += street.isVisited() ? street.getDistance() : 0;
+            System.out.println("(neighboor)distance traveled : " + distanceTravelled2);
+
+            int difDistance = distanceTravelled2 - distanceTravelled;
+
+            if (distanceTravelled2 >= distanceTravelled) {
+                System.out.println("Was a better solution");
+                distanceTravelled = distanceTravelled2;
+                junctions.clear();
+                streets.clear();
+                fleet.clear();
+                junctions = (ArrayList<Junction>) junctionsAux.clone();
+                streets = (ArrayList<Street>) streetsAux.clone();
+                fleet = (ArrayList<Car>) fleetAux.clone();
+
+                numbertrys = 0;
+            }
+            else    {
+                numbertrys++;
+            }
+
+            if(numbertrys == 10)
+                break;
+
+
+            
+            System.out.println("-----------------------------------");
+        }
+    }
 
     //////////////////
 
