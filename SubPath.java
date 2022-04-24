@@ -1,7 +1,7 @@
 public class SubPath {
 
-    private int junction;
-    private int timeLeft;
+    private final int junction;
+    private final int timeLeft;
 
     public SubPath(int j, int t){
         junction = j;
