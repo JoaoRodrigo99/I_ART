@@ -2,22 +2,22 @@ import java.util.ArrayList;
 
 public class Car {
 
-  public Junction junction;
-  public String path;
-  public ArrayList<SubPath> path2 = new ArrayList<SubPath>();
-  public int time = 0;
+  private Junction junction;
+  private String path;
+  private ArrayList<SubPath> path2 = new ArrayList<SubPath>();
+  private int time = 0;
 
   public Car(Junction j) {
-    this.junction = j;
-    this.path = "";
+    this.setJunction(j);
+    this.setPath("");
   }
 
   public int numberJunctions() {
-    return path.length();
+    return getPath().length();
   }
 
   public void reduceTime(int time2Reduce) {
-    time -= time2Reduce;
+    setTime(getTime() - time2Reduce);
   }
 
   public int getTime() {
@@ -28,16 +28,32 @@ public class Car {
     time = time2Set;
   }
 
-  public void setPath(ArrayList<SubPath> auxP) {
-    path2.clear();
-    path2 = auxP;
-  }
-
   public Junction getJunction() {
     return this.junction;
   }
 
   public void setJunction(Junction junc2Set) {
     junction = junc2Set;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(ArrayList<SubPath> auxP) {
+    getPath2().clear();
+    setPath2(auxP);
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public ArrayList<SubPath> getPath2() {
+    return path2;
+  }
+
+  public void setPath2(ArrayList<SubPath> path2) {
+    this.path2 = path2;
   }
 }
