@@ -1,3 +1,6 @@
 *.class
 GraphPanel.java
 I_ART.iml
+*.dat
+temperatures.txt
+output.txt

@@ -25,7 +25,7 @@ public class Street {
     private final int time;
     private final int direction;
     private boolean visited;
-    private final ArrayList<visitInfo> visitedTimes = new ArrayList<>();
+    private ArrayList<visitInfo> visitedTimes = new ArrayList<>();
 
     public Street(Junction junction1, Junction junction2, int direction, int time, int distance) {
         this.junction1 = junction1;
@@ -34,6 +34,25 @@ public class Street {
         this.time = time;
         this.distance = distance;
 
+    }
+
+    public Street(Junction junction1, Junction junction2, int direction, int time, int distance, boolean Vis, ArrayList<visitInfo> vTimes) {
+        this.junction1 = junction1;
+        this.junction2 = junction2;
+        this.direction = direction;
+        this.time = time;
+        this.distance = distance;
+        this.visited = Vis;
+        this.visitedTimes = vTimes;
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public Street copy()    {
+        Street newS = new Street(junction1, junction2, direction, time, distance);
+        newS.visited = this.visited;
+        newS.visitedTimes = this.visitedTimes;
+        return newS;
     }
 
     public void setVisited(int carID, int timeOfVisit) {

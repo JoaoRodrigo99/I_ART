@@ -23,7 +23,6 @@ class streetRouting {
 
     public static void main(String[] args) throws IOException {
 
-        boolean run = true;
         while (true) {
 
 
@@ -33,21 +32,18 @@ class streetRouting {
 
             // Separate function to establish streets for each junction since there are unidirectional streets
             setJunctionStreets();
-            // try{
-            // }
-            // else {throw new InstantiationError("failed\n");}
 
-            // for (Junction j : junctions) j.print();
+            System.out.println("---VALUES READ---");
             System.out.println("total Junctions : " + totalJunctions);
             System.out.println("total Streets : " + totalStreets);
             System.out.println("total Time : " + totalTime);
             System.out.println("total Cars : " + totalCars);
-            System.out.println("initial Junction : " + initJunction);
+            System.out.println("initial Junction : " + initJunction + "\n");
 
             // Initializes all cars paths to their starting position
             for (int i = 0; i < totalCars; ++i) {
                 Car currentCar = new Car(junctions.get(initJunction));
-                currentCar.path2.add(new SubPath(initJunction, totalTime));
+                currentCar.path.add(new SubPath(initJunction, totalTime));
                 fleet.add(currentCar);
             }
 
@@ -57,13 +53,13 @@ class streetRouting {
                 c.setTime(totalTime);
 
             for (Car car : fleet) {
-                while (car.getTime() > 0) {
+                while (car.getTime() >= 0) {
                     // Arbitrarily init the best available street to go through
                     ArrayList<Street> availableStreets = car.junction.getStreets();
                     Street bestStreet = availableStreets.get(randomGenerator.nextInt(availableStreets.size()));
 
                     // Stop if time's up
-                    if ((car.getTime() - bestStreet.getTime()) <= 0) break;
+                    if ((car.getTime() - bestStreet.getTime()) < 0) break;
 
                     car.reduceTime(bestStreet.getTime());
 
@@ -77,33 +73,22 @@ class streetRouting {
                             bestStreet.getJunction(1);
 
 
-                    car.path2.add(new SubPath(junctions.indexOf(car.junction), car.getTime()));
+                    car.path.add(new SubPath(junctions.indexOf(car.junction), car.getTime()));
 
                 }
             }
 
-
-            // for (Car car : fleet){ //Print paths
-            //     System.out.println(fleet.indexOf(car) + ":");
-            //     for(SubPath sp : car.path2){
-
-            //         System.out.print("  (" + sp.getJunction() +",");
-            //         System.out.print(sp.getTimeL() + ") ");
-            //     }
-            //     System.out.println();
-            // }
-
             for (Street street : streets) distanceTravelled += street.isVisited() ? street.getDistance() : 0;
 
-            // System.out.println("distance traveled : " + distanceTravelled);
-            // System.out.println(junctions.get(1).getStreets().size());
-            System.out.println(factorial(4));
-            System.out.println("Which algorthim do you want? \n");
+            System.out.println("\nWhich algorthim do you want? \n");
             System.out.println("1. Random (Only 1 iteration - path randomly generated as starting point of every algorthim\n");
-            System.out.println("2. Simulated Annealing (Temperature = 60, cooling(per cycle) = -0.25\n");
+            System.out.println("2. Simulated Annealing (Temperature = 60, cooling(per cycle) = -0.25)\n");
             System.out.println("3. Taboo Search \n");
-            System.out.println("4. Greedy aproach (only changes solution if it is better) \n"); //If it has failed to improve for 10 times breaks
+            System.out.println("4. Greedy aproach/Hill Climbing (only changes solution if it is better) \n"); //If it has failed to improve for 10 times breaks
             System.out.println("q. Quit");
+
+            //Start time
+            double timeStart = System.currentTimeMillis();
 
             BufferedReader terminalInput = new BufferedReader(new InputStreamReader(System.in));
 
@@ -130,9 +115,9 @@ class streetRouting {
 
 
             System.out.println("Final Paths : \n");
-            for (Car car : fleet) { //Print paths
+            for (Car car : fleet) { //Print paths after algorthim
                 System.out.println(fleet.indexOf(car) + ":");
-                for (SubPath sp : car.path2) {
+                for (SubPath sp : car.path) {
 
                     System.out.print("  (" + sp.getJunction() + ",");
                     System.out.print(sp.getTimeL() + ") ");
@@ -144,6 +129,11 @@ class streetRouting {
             writeOutput("output.txt");
             writeGraphDat("graph.dat");
             writePathsDat("path");
+
+            double timeEnd = System.currentTimeMillis();
+
+            // System.out.println(timeStart + "-----"+timeEnd);
+            System.out.println("Running time was " +(timeEnd-timeStart) +" miliseconds -> " + (timeEnd-timeStart)/1000 + " seconds\n");
 
             System.out.println("Press Enter key to continue...");
             terminalInput.readLine();
@@ -191,7 +181,7 @@ class streetRouting {
             System.out.println("INITAL PATHS");
             for (Car car : fleet) { //Print paths
                 System.out.println(fleet.indexOf(car) + ":");
-                for (SubPath sp : car.path2) {
+                for (SubPath sp : car.path) {
 
                     System.out.print("  (" + sp.getJunction() + ",");
                     System.out.print(sp.getTimeL() + ") ");
@@ -209,18 +199,18 @@ class streetRouting {
             Car auxCar = fleetAux.get(car2Choose);
 
             //Pick a random JUNCTION
-            int junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+            int junc2Choose = randomGenerator.nextInt(auxCar.path.size());
 
             //Checks if a change can be made in that junction, if not select another junction(the came after the randomly picked). If no junction can be changed, move to another car
             while (true) {
-                if (junc2Choose > auxCar.path2.size() - 1) {
+                if (junc2Choose > auxCar.path.size() - 1) {
                     car2Choose = randomGenerator.nextInt(fleetAux.size());
                     auxCar = fleetAux.get(car2Choose);
-                    junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+                    junc2Choose = randomGenerator.nextInt(auxCar.path.size());
                 }
 
                 //If the junction has another street than car can go another way
-                if (junctionsAux.get(auxCar.path2.get(junc2Choose).getJunction()).getStreets().size() > 1) break;
+                if (junctionsAux.get(auxCar.path.get(junc2Choose).getJunction()).getStreets().size() > 1) break;
                 else {
                     junc2Choose++;
                 }
@@ -228,13 +218,9 @@ class streetRouting {
 
 
             //Repor valores do Carro desde a junction escolhido, isto é cortar o path depois dessa junction
-            List<SubPath> tempPathAux = auxCar.path2.subList(0, junc2Choose);
+            List<SubPath> tempPathAux = auxCar.path.subList(0, junc2Choose);
             ArrayList<SubPath> tempPath = new ArrayList<SubPath>();
             tempPath.addAll(tempPathAux);
-
-            //Print random choices
-            // System.out.println(auxCar);
-            // System.out.println("junc : " + junc2Choose);
 
             //Set remaining time && and currentJunction 
             if (junc2Choose > 0) {
@@ -248,7 +234,7 @@ class streetRouting {
             auxCar.setPath(tempPath);
 
             // Form car new Path
-            while (auxCar.getTime() > 0) {
+            while (auxCar.getTime() >= 0) {
                 // Arbitrarily init the random available street to go through
                 ArrayList<Street> availableStreets = auxCar.junction.getStreets();
                 Street bestStreet = availableStreets.get(randomGenerator.nextInt(availableStreets.size()));
@@ -263,13 +249,13 @@ class streetRouting {
                 auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ? bestStreet.getJunction(2) : bestStreet.getJunction(1);
 
 
-                auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
+                auxCar.path.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
             }
 
             // Check for which streets were visited
             for (Car c : fleetAux) {
                 int prevJ = -1;
-                for (SubPath sp : c.path2) {
+                for (SubPath sp : c.path) {
                     if (prevJ == -1) prevJ = sp.getJunction();
                     else {
                         for (Street s : streetsAux) {
@@ -305,6 +291,8 @@ class streetRouting {
                 System.out.println("\nWorse Case ...");
                 double rNum = randomGenerator.nextDouble();
                 double probab = Math.exp(difDistance / temperature); //PROBABILIDADE (0-100%)
+
+                //Print probabilities...
                 // System.out.println("difDist = " + difDistance + "\n" + "Temp : " + temperature);
                 // System.out.println("Random Double : " + rNum + "\n"+ "Probability" + probab +" ->(e^difDist/Temp)");
                 // System.out.println("Rnum <= probab");
@@ -351,7 +339,7 @@ class streetRouting {
             System.out.println("INITAL PATHS");
             for (Car car : fleet) { //Print paths
                 System.out.println(fleet.indexOf(car) + ":");
-                for (SubPath sp : car.path2) {
+                for (SubPath sp : car.path) {
 
                     System.out.print("  (" + sp.getJunction() + ",");
                     System.out.print(sp.getTimeL() + ") ");
@@ -369,18 +357,18 @@ class streetRouting {
             Car auxCar = fleetAux.get(car2Choose);
 
             //Pick a random JUNCTION
-            int junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+            int junc2Choose = randomGenerator.nextInt(auxCar.path.size());
 
             //Checks if a change can be made in that junction, if not select another junction(the came after the randomly picked). If no junction can be changed, move to another car
             while (true) {
-                if (junc2Choose > auxCar.path2.size() - 1) {
+                if (junc2Choose > auxCar.path.size() - 1) {
                     car2Choose = randomGenerator.nextInt(fleetAux.size());
                     auxCar = fleetAux.get(car2Choose);
-                    junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+                    junc2Choose = randomGenerator.nextInt(auxCar.path.size());
                 }
 
                 //If the junction has another street than car can go another way
-                if (junctionsAux.get(auxCar.path2.get(junc2Choose).getJunction()).getStreets().size() > 1) break;
+                if (junctionsAux.get(auxCar.path.get(junc2Choose).getJunction()).getStreets().size() > 1) break;
                 else {
                     junc2Choose++;
                 }
@@ -388,13 +376,9 @@ class streetRouting {
 
 
             //Repor valores do Carro desde a junction escolhido, isto é cortar o path depois dessa junction
-            List<SubPath> tempPathAux = auxCar.path2.subList(0, junc2Choose);
+            List<SubPath> tempPathAux = auxCar.path.subList(0, junc2Choose);
             ArrayList<SubPath> tempPath = new ArrayList<SubPath>();
             tempPath.addAll(tempPathAux);
-
-            //Print random choices
-            // System.out.println(auxCar);
-            // System.out.println("junc : " + junc2Choose);
 
             //Set remaining time && and currentJunction
             if (junc2Choose > 0) {
@@ -408,7 +392,7 @@ class streetRouting {
             auxCar.setPath(tempPath);
 
             //Form car new Path
-            while (auxCar.getTime() > 0) {
+            while (auxCar.getTime() >= 0) {
                 // Arbitrarily init the random available street to go through
                 ArrayList<Street> availableStreets = auxCar.junction.getStreets();
                 Street bestStreet = availableStreets.get(randomGenerator.nextInt(availableStreets.size()));
@@ -423,13 +407,13 @@ class streetRouting {
                 auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ? bestStreet.getJunction(2) : bestStreet.getJunction(1);
 
 
-                auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
+                auxCar.path.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
             }
 
             //Check for which streets were visited
             for (Car c : fleetAux) {
                 int prevJ = -1;
-                for (SubPath sp : c.path2) {
+                for (SubPath sp : c.path) {
                     if (prevJ == -1) prevJ = sp.getJunction();
                     else {
                         for (Street s : streetsAux) {
@@ -459,10 +443,19 @@ class streetRouting {
                 distanceTravelled = distanceTravelled2;
                 junctions.clear();
                 streets.clear();
-                fleet.clear();
+                fleet.clear();                
                 junctions = (ArrayList<Junction>) junctionsAux.clone();
                 streets = (ArrayList<Street>) streetsAux.clone();
-                fleet = (ArrayList<Car>) fleetAux.clone();
+                // fleet = (ArrayList<Car>) fleetAux.clone();
+                for(Car c : fleetAux){
+                    Car newC = new Car(c.getJunction());
+                    newC.time = c.getTime();
+
+                    for(SubPath sp : c.getPath()){
+                        newC.path.add(new SubPath(sp.getJunction(), sp.getTimeL()));
+                    }
+                    fleet.add(newC);
+                }
 
                 numbertrys = 0;
             } else {
@@ -476,6 +469,8 @@ class streetRouting {
             System.out.println("-----------------------------------");
         }
     }
+
+    
 
     @SuppressWarnings("unchecked")
     public static void TabooSearch() {
@@ -498,11 +493,7 @@ class streetRouting {
 
         //Combinations possible C(streets.size() , avgStreetVis)
         double totalPossPaths = factorial(streets.size()) / (factorial(Math.floor(streets.size() - avgStreetVis)) * factorial((avgStreetVis - 1)));
-        // System.out.println("street size : " + streets.size());
-        // System.out.println("avgStreetvis :" + avgStreetVis);
-        // System.out.println(factorial((int) Math.floor(streets.size() - avgStreetVis)));
-        // System.out.println(factorial((int) (avgStreetVis-1)));
-        System.out.println(totalPossPaths);
+
         //Average max distance travelled
         double avgStreetVisDist = avgDist * avgStreetVis;
 
@@ -514,23 +505,64 @@ class streetRouting {
         ArrayList<ArrayList<Street>> streetsTaboo = new ArrayList<>();
         ArrayList<ArrayList<Car>> fleetTaboo = new ArrayList<>();
 
+        // junctionsTaboo.add(new ArrayList<>());
+        // streetsTaboo.add(new ArrayList<>());
+        fleetTaboo.add(new ArrayList<>());
+
         junctionsTaboo.add(junctions);
+        // for(Junction j : junctions){
+        //     junctionsTaboo.get(junctionsTaboo.size() -1).add(new Junction(j.getX(), j.getY(), j.getStreets()));
+        // }
         streetsTaboo.add(streets);
-        fleetTaboo.add(fleet);
+        // for(Street s : streets){
+        //     streetsTaboo.get(streetsTaboo.size()-1).add(new Street(s.getJunction(1), s.getJunction(2), s.getDirection(), s.getTime(), s.getDistance()));
+        // }
+        for(Car c : fleet){
+            Car tempC = new Car(c.getJunction());
+            tempC.setTime(c.getTime());
+            for(SubPath sp : c.getPath())
+            tempC.path.add(new SubPath(sp.getJunction(), sp.getTimeL()));
+
+            fleetTaboo.get(fleetTaboo.size()-1).add(tempC);
+
+        }
 
         // System.out.println(totalPossPaths + " >=" + junctionsTaboo.size());
         if (totalPossPaths > 1000)
             totalPossPaths = 1000;
-        while (10 >= junctionsTaboo.size()) {
+            int tempC = 0;
+        while (5 >= junctionsTaboo.size()) {
 
             //Creates copys of original solution
             ArrayList<Junction> junctionsAux = new ArrayList<>();
             ArrayList<Street> streetsAux = new ArrayList<>();
             ArrayList<Car> fleetAux = new ArrayList<>();
 
-            junctionsAux.addAll(junctionsTaboo.get(junctionsTaboo.size() - 1));
-            streetsAux.addAll(streetsTaboo.get(streetsTaboo.size() - 1));
-            fleetAux.addAll(fleetTaboo.get(fleetTaboo.size() - 1));
+            
+            if(tempC > 0)
+            System.out.println("OLDJUNC " + fleetTaboo.get(fleetTaboo.size() - 1).clone());
+            tempC++;
+            System.out.println("tempC - " + tempC);
+            System.out.println("JT size:" + junctionsTaboo.size());
+            junctionsAux = (ArrayList<Junction>)junctionsTaboo.get(junctionsTaboo.size() - 1).clone();
+            streetsAux = (ArrayList<Street>)streetsTaboo.get(streetsTaboo.size() - 1).clone();
+            fleetAux = (ArrayList<Car>)fleetTaboo.get(fleetTaboo.size() - 1).clone();
+            System.out.println("NEWJUNC " + fleetAux);
+
+            System.out.println("INITAL PATHS");
+            for (Car car : fleetAux) { //Print paths
+                System.out.println(fleetAux.indexOf(car) + ":");
+                for (SubPath sp : car.path) {
+
+                    System.out.print("  (" + sp.getJunction() + ",");
+                    System.out.print(sp.getTimeL() + ") ");
+                }
+                System.out.println();
+
+            }
+            // if(junctionsTaboo.){}
+            // for(Street s : streetsAux)
+            //     s.print();
 
 
             // writeTempNumbers("temperatures.txt", Integer.toString(distanceTravelled));
@@ -539,7 +571,7 @@ class streetRouting {
             // System.out.println("INITAL PATHS");
             // for (Car car : fleet){ //Print paths
             //     System.out.println(fleet.indexOf(car) + ":");
-            //     for(SubPath sp : car.path2){
+            //     for(SubPath sp : car.path){
 
             //         System.out.print("  (" + sp.getJunction() +",");
             //         System.out.print(sp.getTimeL() + ") ");
@@ -553,22 +585,23 @@ class streetRouting {
                 s.unVisit();
 
             //Pick a random CAR
+            System.out.println(fleetAux.size());
             int car2Choose = randomGenerator.nextInt(fleetAux.size());
             Car auxCar = fleetAux.get(car2Choose);
 
             //Pick a random JUNCTION
-            int junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+            int junc2Choose = randomGenerator.nextInt(auxCar.path.size());
 
             //Checks if a change can be made in that junction, if not select another junction(the came after the randomly picked). If no junction can be changed, move to another car
             while (true) {
-                if (junc2Choose > auxCar.path2.size() - 1) {
+                if (junc2Choose > auxCar.path.size() - 1) {
                     car2Choose = randomGenerator.nextInt(fleetAux.size());
                     auxCar = fleetAux.get(car2Choose);
-                    junc2Choose = randomGenerator.nextInt(auxCar.path2.size());
+                    junc2Choose = randomGenerator.nextInt(auxCar.path.size());
                 }
-
+                System.out.println("j2Choose : " + junc2Choose +"\\ juncCar : " + auxCar.path.get(junc2Choose).getJunction());
                 //If the junction has another street than car can go another way
-                if (junctionsAux.get(auxCar.path2.get(junc2Choose).getJunction()).getStreets().size() > 1)
+                if (junctionsAux.get(auxCar.path.get(junc2Choose).getJunction()).getStreets().size() > 1)
                     break;
                 else {
                     junc2Choose++;
@@ -577,7 +610,7 @@ class streetRouting {
 
 
             //Repor valores do Carro desde a junction escolhido, isto é cortar o path depois dessa junction
-            List<SubPath> tempPathAux = auxCar.path2.subList(0, junc2Choose);
+            List<SubPath> tempPathAux = auxCar.path.subList(0, junc2Choose);
             ArrayList<SubPath> tempPath = new ArrayList<SubPath>();
             tempPath.addAll(tempPathAux);
 
@@ -598,11 +631,11 @@ class streetRouting {
 
             //Form car new Path
 
-            while (auxCar.getTime() > 0) {
+            while (auxCar.getTime() >= 0) {
                 // Arbitrarily init the random available street to go through
                 ArrayList<Street> availableStreets = auxCar.junction.getStreets();
                 Street bestStreet = availableStreets.get(randomGenerator.nextInt(availableStreets.size()));
-
+                System.out.println(bestStreet.getJunction(1) +"|" +bestStreet.getJunction(2));
                 // Stop if time's up
                 if ((auxCar.getTime() - bestStreet.getTime()) < 0) break;
 
@@ -610,18 +643,20 @@ class streetRouting {
 
                 // If current car is located at junction 1, we should go to junction 2
                 // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
+                // System.out.println("old" + auxCar.junction);
                 auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ?
                         bestStreet.getJunction(2) :
                         bestStreet.getJunction(1);
+                // System.out.println("new"+auxCar.junction);
 
                 //Add new junction to path
-                auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
+                auxCar.path.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
             }
 
             //Check for which streets were visited
             for (Car c : fleetAux) {
                 int prevJ = -1;
-                for (SubPath sp : c.path2) {
+                for (SubPath sp : c.path) {
                     if (prevJ == -1)
                         prevJ = sp.getJunction();
                     else {
@@ -635,6 +670,18 @@ class streetRouting {
                     }
 
                 }
+            }
+
+            System.out.println("Formed PATHS");
+            for (Car car : fleetAux) { //Print paths
+                System.out.println(fleetAux.indexOf(car) + ":");
+                for (SubPath sp : car.path) {
+
+                    System.out.print("  (" + sp.getJunction() + ",");
+                    System.out.print(sp.getTimeL() + ") ");
+                }
+                System.out.println();
+
             }
 
             // System.out.println("Comparing cases\n");
@@ -657,13 +704,41 @@ class streetRouting {
                     streets.clear();
                     fleet.clear();
 
-                    ArrayList<Junction> toAddJ = (ArrayList<Junction>) junctionsAux.clone();
-                    ArrayList<Street> toAddS = (ArrayList<Street>) streetsAux.clone();
-                    ArrayList<Car> toAddC = (ArrayList<Car>) fleetAux.clone();
+                    // ArrayList<Junction> toAddJ = (ArrayList<Junction>) junctionsAux.clone();
+                    // ArrayList<Street> toAddS = (ArrayList<Street>) streetsAux.clone();
+                    // ArrayList<Car> toAddC = (ArrayList<Car>) fleetAux.clone();
 
-                    junctionsTaboo.add(toAddJ);
-                    streetsTaboo.add(toAddS);
-                    fleetTaboo.add(toAddC);
+                    // junctionsTaboo.add(toAddJ);
+                    // streetsTaboo.add(toAddS);
+                    // fleetTaboo.add(toAddC);
+                    // for(Junction j : junctionsAux){
+                    //     junctionsTaboo.get(junctionsTaboo.size() -1).add(new Junction(j.getX(), j.getY(), j.getStreets()));
+                    // }
+            
+                    // for(Street s : streets){
+                    //     streetsTaboo.get(streetsAux.size()-1).add(new Street(s.getJunction(1), s.getJunction(2), s.getDirection(), s.getTime(), s.getDistance()));
+                    // }
+                    // for(Car c : fleet){
+                    //     fleetTaboo.get(fleetAux.size()-1).add(new Car(c.getJunction(), c.getPath(), c.getTime()));
+                    // }
+                    junctionsTaboo.add((ArrayList<Junction>) junctionsAux.clone());
+                    streetsTaboo.add((ArrayList<Street>) streetsAux.clone());
+                    ArrayList<Car> tempFleet = new ArrayList<>();
+                    for(Car c : fleetAux){
+                        Car newC = new Car(c.getJunction());
+                        newC.time = c.getTime();
+    
+                        for(SubPath sp : c.getPath()){
+                            newC.path.add(new SubPath(sp.getJunction(), sp.getTimeL()));
+                        }
+                        tempFleet.add(newC);
+                    }
+                    // System.out.println("tempflEET_" + tempFleet);
+                    fleetTaboo.add((ArrayList<Car>) tempFleet.clone());
+                    System.out.println("Sies:");
+                    System.out.println(fleetTaboo.get(fleetTaboo.size()-1).size());
+                    tempFleet.clear();
+                    System.out.println(fleetTaboo.get(fleetTaboo.size()-1).size());
 
 
                     // junctions = (ArrayList<Junction>) junctionsAux.clone();
@@ -686,7 +761,20 @@ class streetRouting {
 
                         junctionsTaboo.add((ArrayList<Junction>) junctionsAux.clone());
                         streetsTaboo.add((ArrayList<Street>) streetsAux.clone());
-                        fleetTaboo.add((ArrayList<Car>) fleetAux.clone());
+                        // fleetTaboo.add((ArrayList<Car>) fleetAux.clone());
+                        ArrayList<Car> tempFleet = new ArrayList<>();
+                        for(Car c : fleetAux){
+                            Car newC = new Car(c.getJunction());
+                            newC.time = c.getTime();
+        
+                            for(SubPath sp : c.getPath()){
+                                newC.path.add(new SubPath(sp.getJunction(), sp.getTimeL()));
+                            }
+                            tempFleet.add(newC);
+                        }
+                        fleetTaboo.add(tempFleet);
+                        tempFleet.clear();
+
 
                         // junctions = (ArrayList<Junction>) junctionsAux.clone();
                         // streets = (ArrayList<Street>) streetsAux.clone();
@@ -719,7 +807,7 @@ class streetRouting {
             //     fleetTaboo.get(junctionsTaboo.size() -1).add(c);
             // }
 
-
+            // System.out.println("newJUNC " + junctions);
             // temperature -= 0.25;
             System.out.println("-----------------------------------");
         }
@@ -744,6 +832,10 @@ class streetRouting {
         junctions = (ArrayList<Junction>) junctionsTaboo.get(indexStreet).clone();
         streets = (ArrayList<Street>) streetsTaboo.get(indexStreet).clone();
         fleet = (ArrayList<Car>) fleetTaboo.get(indexStreet).clone();
+        // junctions = (ArrayList<Junction>) junctionsAux.clone();
+        // streets = (ArrayList<Street>) streetsAux.clone();
+        // fleet = (ArrayList<Car>) fleetAux.clone();
+
 
 
     }
@@ -769,11 +861,11 @@ class streetRouting {
         for (ArrayList<Car> singleFleet : fleetsList) {
             //Check fleets
             for (int i = 0; i < singleFleet.size(); i++) {
-                if (singleFleet.get(i).path2.size() != fleetIn.get(i).path2.size())
+                if (singleFleet.get(i).path.size() != fleetIn.get(i).path.size())
                     isR[b] = false;
                 //Check paths
-                for (int p = 0; p < singleFleet.get(i).path2.size(); p++) {
-                    if (singleFleet.get(i).path2.get(p).getJunction() == fleetIn.get(i).path2.get(p).getJunction()) {
+                for (int p = 0; p < singleFleet.get(i).path.size(); p++) {
+                    if (singleFleet.get(i).path.get(p).getJunction() == fleetIn.get(i).path.get(p).getJunction()) {
 
                     } else {
                         isR[b] = false;
@@ -799,11 +891,11 @@ class streetRouting {
 
             bufferedWriter.write(fleet.size() + "\n");
             for (Car c : fleet) {
-                bufferedWriter.write(c.path2.size() + "\n");
-                for (int i = 0; i < c.path2.size(); i++) {
-                    bufferedWriter.write(c.path2.get(i).getJunction() + "\n");
+                bufferedWriter.write(c.path.size() + "\n");
+                for (int i = 0; i < c.path.size(); i++) {
+                    bufferedWriter.write(c.path.get(i).getJunction() + "\n");
                 }
-                bufferedWriter.write("-\n");
+                bufferedWriter.write("\n");
             }
 
             bufferedWriter.close();
@@ -836,6 +928,7 @@ class streetRouting {
 
     public static void ResetTempFile(String fileName) {
 
+        //Reset temperatures file every time Simulated Annealing in run
         try {
             FileWriter myWriter = new FileWriter("temperatures.txt", false);
             BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
@@ -862,7 +955,7 @@ class streetRouting {
 
                 bufferedWriter.write("# " + i + "\n");
 
-                ArrayList<SubPath> sp = fleet.get(i).path2;
+                ArrayList<SubPath> sp = fleet.get(i).path;
                 for (int j = 0; j < sp.size() / 2; j += 2) {
                     bufferedWriter.write(junctions.get(sp.get(j).getJunction()).getX() + " " + junctions.get(sp.get(j).getJunction()).getY() + " " + sp.get(j).getJunction() + "\n");
                     bufferedWriter.write(junctions.get(sp.get(j + 1).getJunction()).getX() + " " + junctions.get(sp.get(j + 1).getJunction()).getY() + " " + sp.get(j + 1).getJunction() + "\n");
@@ -906,6 +999,7 @@ class streetRouting {
             File myObj = new File("newinput.txt");
             Scanner myReader = new Scanner(myObj);
 
+            //Parse differente ints corresponding to each variable
             String data = myReader.nextLine();
             String[] config = data.split(" ");
             totalJunctions = Integer.parseInt(config[0]);
@@ -915,6 +1009,7 @@ class streetRouting {
             initJunction = Integer.parseInt(config[4]);
 
             int cycleCount = 1;
+            //First creating junction with its coords, than create streets with junctions it connects and directions, distance, time.
             while (myReader.hasNextLine()) {
                 data = myReader.nextLine();
                 if (cycleCount <= totalJunctions) {
@@ -940,6 +1035,7 @@ class streetRouting {
 
     public static void setJunctionStreets() {
 
+        //For every junction add possible streets that the car can go through (Checks direction)
         for (Junction j : junctions) {
             for (Street s : streets) {
                 // If direction == 1 streets are unidirectional

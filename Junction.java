@@ -4,12 +4,27 @@ public class Junction {
 
     private final double x;
     private final double y;
-    private final ArrayList<Street> streets;
+    private ArrayList<Street> streets;
 
     public Junction(double x, double y) {
         streets = new ArrayList<>();
         this.x = x;
         this.y = y;
+    }
+
+    public Junction(double x, double y, ArrayList<Street> sts) {
+        streets = new ArrayList<>();
+        this.x = x;
+        this.y = y;
+        streets = sts;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Junction copy(){
+        Junction newJ = new Junction(x, y);
+        newJ.streets = (ArrayList<Street>) streets.clone();
+
+        return newJ;
     }
 
     public void addStreet(Street s) {
