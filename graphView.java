@@ -1,25 +1,16 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.Scanner;
 
 public class graphView {
-  public static void main(String[] args) throws IOException {
+  public static void plot(String algorithm) {
     String[] s = new String[4 * 10 + 1];
     int counter = 0;
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 10; j++) {
-        StringBuilder iter = new StringBuilder();
-        iter.append("gnuplot -e \"DATAFILE='paths/car");
-        iter.append(i);
-        iter.append("/iteration-");
-        iter.append(j);
-        iter.append(".dat'; OUTFILE='imgs/car");
-        iter.append(i);
-        iter.append("-");
-        iter.append(j);
-        iter.append(".png'\" plot.plt");
-        s[counter] = iter.toString();
+        String iter = "gnuplot -e \"DATAFILE='paths/car" + i + "/" + algorithm + "/iteration-" + j + ".dat'; OUTFILE='imgs/" + algorithm + "/car" + i + "-" + j + ".png'\" plot.plt";
+        s[counter] = iter;
         ++counter;
       }
     }
@@ -47,10 +38,23 @@ public class graphView {
         int exitCode = process.waitFor();
         System.out.println("\nExited with error code : " + exitCode);
       }
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException e) {
       e.printStackTrace();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    }
+  }
+  public static void main(String[] args) {
+    Scanner in = new Scanner(System.in);
+    System.out.println("""
+            1. Simulated Annealing Random
+            2. Simulated Annealing Greedy
+            3. Taboo search""");
+
+    int optionChosen = in.nextInt();
+
+    switch (optionChosen) {
+      case 1 -> plot("simulatedAnnealingRandom");
+      case 2 -> plot("simulatedAnnealingGreedy");
+      case 3 -> plot("tabooSearch");
     }
   }
 }

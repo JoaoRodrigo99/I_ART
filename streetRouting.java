@@ -114,11 +114,12 @@ class streetRouting {
                 input = terminalInput.readLine();
             }
 
+            int option;
             //Decision considering input option
             if (input.charAt(0) == 'q') {
                 break;
             } else {
-                int option = Integer.parseInt(input);
+                option = Integer.parseInt(input);
 
                 switch (option) {
                     case 1 -> System.out.println("\nGenerating random paths...\n");
@@ -143,7 +144,12 @@ class streetRouting {
 
             writeOutput("output.txt");
             writeGraphDat("paths/graph.dat");
-            writePathsDat("paths/path");
+
+            switch (option) {
+                case 2 -> writePathsDat("paths/finalPaths/simulatedAnnealingRandom/path");
+                case 3 -> writePathsDat("paths/finalPaths/tabooSearch/path");
+                case 4 -> writePathsDat("paths/finalPaths/simulatedAnnealingGreedy/path");
+            }
 
             System.out.println("Press Enter key to continue...");
             terminalInput.readLine();
@@ -199,13 +205,13 @@ class streetRouting {
                 System.out.println();
 
             }
-            System.out.println("(Current) Distance Travalled : " + distanceTravelled);
+            System.out.println("(Current) Distance Travelled : " + distanceTravelled);
 
             for (Street s : streetsAux)
                 s.unVisit();
 
             //Pick a random CAR 
-            int car2Choose = randomGenerator.nextInt(fleetAux.size());
+            int car2Choose = randomGenerator.nextInt(0, fleetAux.size());
             Car auxCar = fleetAux.get(car2Choose);
 
             //Pick a random JUNCTION
@@ -263,7 +269,7 @@ class streetRouting {
                 auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ? bestStreet.getJunction(2) : bestStreet.getJunction(1);
 
                 auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
-                writeCurrentPath(auxCar, car2Choose, auxCar.path2.size() - 2);
+                writeCurrentPath("simulatedAnnealingRandom", auxCar, car2Choose, auxCar.path2.size() - 2);
             }
 
             // Check for which streets were visited
@@ -422,7 +428,7 @@ class streetRouting {
                 // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
                 auxCar.junction = bestStreet.getJunction(1) == auxCar.junction ? bestStreet.getJunction(2) : bestStreet.getJunction(1);
 
-
+                writeCurrentPath("simulatedAnnealingGreedy", auxCar, car2Choose, auxCar.path2.size() - 2);
                 auxCar.path2.add(new SubPath(junctionsAux.indexOf(auxCar.junction), auxCar.getTime()));
             }
 
@@ -597,7 +603,6 @@ class streetRouting {
             auxCar.setPath(tempPath);
 
             //Form car new Path
-
             while (auxCar.getTime() > 0) {
                 // Arbitrarily init the random available street to go through
                 ArrayList<Street> availableStreets = auxCar.junction.getStreets();
@@ -879,10 +884,10 @@ class streetRouting {
         }
     }
 
-    public static void writeCurrentPath(Car currentCar, int carNumber, int iterationNumber) {
+    public static void writeCurrentPath(String algorithm, Car currentCar, int carNumber, int iterationNumber) {
 
         try {
-            String filename = "paths/car" + carNumber + "/" + "iteration-" + iterationNumber;
+            String filename = "paths/car" + carNumber + "/" + algorithm + "/" + "iteration-" + iterationNumber;
             FileWriter myWriter = new FileWriter(filename + ".dat", false);
             BufferedWriter bufferedWriter = new BufferedWriter(myWriter);
             bufferedWriter.write("#x1 y1 x2 y2 id\n");
