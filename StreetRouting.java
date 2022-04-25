@@ -110,9 +110,9 @@ class StreetRouting extends InputOutputHelper {
       writeGraphDat("paths/graph.dat");
 
       switch (option) {
-        case 2 -> writePathsDat("paths/finalPaths/simulatedAnnealingRandom/path");
+        case 2 -> writePathsDat("paths/finalPaths/simulatedAnnealing/path");
         case 3 -> writePathsDat("paths/finalPaths/tabooSearch/path");
-        case 4 -> writePathsDat("paths/finalPaths/simulatedAnnealingGreedy/path");
+        case 4 -> writePathsDat("paths/finalPaths/hillClimbing/path");
       }
 
       System.out.println("Press Enter key to continue...");
@@ -155,7 +155,6 @@ class StreetRouting extends InputOutputHelper {
     double temperature = 60;
 
     while (temperature > 0) {
-
       //Creates copys of original solution
       ArrayList<Junction> junctionsAux = new ArrayList<>(getJunctions());
       ArrayList<Street> streetsAux = new ArrayList<>(EmptyStreets);
@@ -216,7 +215,7 @@ class StreetRouting extends InputOutputHelper {
         auxCar.setJunction(bestStreet.getJunction(1) == auxCar.getJunction() ? bestStreet.getJunction(2): bestStreet.getJunction(1));
 
         auxCar.getPath2().add(new SubPath(junctionsAux.indexOf(auxCar.getJunction()), auxCar.getTime()));
-        writeCurrentPath("simulatedAnnealingRandom", auxCar, car2Choose, auxCar.getPath2().size() - 2);
+        writeCurrentPath("simulatedAnnealing", auxCar, car2Choose, auxCar.getPath2().size() - 2);
       }
 
       visitedCheck(junctionsAux, streetsAux, fleetAux);
@@ -293,9 +292,9 @@ class StreetRouting extends InputOutputHelper {
       ArrayList<Car> fleetAux = new ArrayList<>(getFleet());
 
       // Print Current path of choice
-      System.out.println("INITAL PATHS");
+      System.out.println("INITIAL PATHS");
       pathPrinter();
-      System.out.println("(Current) Distance Travalled: " + getDistanceTravelled());
+      System.out.println("(Current) Distance Travelled: " + getDistanceTravelled());
 
       for (Street s : streetsAux)
         s.unVisit();
@@ -334,6 +333,13 @@ class StreetRouting extends InputOutputHelper {
         // Arbitrarily init the random available street to go through
         ArrayList<Street> availableStreets = auxCar.getJunction().getStreets();
         Street bestStreet = availableStreets.get(getRandomGenerator().nextInt(availableStreets.size()));
+        int maxStreetDistance = bestStreet.getDistance();
+        for (Street street: availableStreets) {
+          if (street.getDistance() > maxStreetDistance && !street.isVisited()) {
+            maxStreetDistance = street.getDistance();
+            bestStreet = street;
+          }
+        }
 
         // Stop if time's up
         if ((auxCar.getTime() - bestStreet.getTime()) < 0) break;
@@ -344,7 +350,7 @@ class StreetRouting extends InputOutputHelper {
         // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
         auxCar.setJunction(bestStreet.getJunction(1) == auxCar.getJunction() ? bestStreet.getJunction(2): bestStreet.getJunction(1));
 
-        writeCurrentPath("simulatedAnnealingGreedy", auxCar, car2Choose, auxCar.getPath2().size() - 2);
+        writeCurrentPath("hillClimbing", auxCar, car2Choose, auxCar.getPath2().size() - 2);
         auxCar.getPath2().add(new SubPath(junctionsAux.indexOf(auxCar.getJunction()), auxCar.getTime()));
       }
 
@@ -423,7 +429,7 @@ class StreetRouting extends InputOutputHelper {
         setCurrentTimeAndJunction(junctionsAux, auxCar, junc2Choose, tempPath);
 
         //Form car new Path
-        while (auxCar.getTime() > 0) {
+        while (auxCar.getTime() >= 0) {
           // Arbitrarily init the random available street to go through
           ArrayList<Street> availableStreets = auxCar.getJunction().getStreets();
           Street bestStreet = availableStreets.get(getRandomGenerator().nextInt(availableStreets.size()));
@@ -487,6 +493,8 @@ class StreetRouting extends InputOutputHelper {
           }
         }
 
+        System.out.println(fleetTaboo);
+
         System.out.println("-----------------------------------");
       }
     }
@@ -511,7 +519,6 @@ class StreetRouting extends InputOutputHelper {
     setJunctions((ArrayList<Junction>) junctionsTaboo.get(indexStreet).clone());
     setStreets((ArrayList<Street>) streetsTaboo.get(indexStreet).clone());
     setFleet((ArrayList<Car>) fleetTaboo.get(indexStreet).clone());
-
   }
 
   public static void setCurrentTimeAndJunction(ArrayList<Junction> junctionsAux, Car auxCar, int junc2Choose, ArrayList<SubPath> tempPath) {

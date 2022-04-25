@@ -49,15 +49,15 @@ public class GraphPlotter {
   public static void main(String[] args) {
     Scanner in = new Scanner(System.in);
     System.out.println("""
-        1. Simulated Annealing Random
-        2. Simulated Annealing Greedy
+        1. Simulated Annealing
+        2. Hill Climbing
         3. Taboo search""");
 
     int optionChosen = in.nextInt();
 
     switch (optionChosen) {
-      case 1 -> plot("simulatedAnnealingRandom");
-      case 2 -> plot("simulatedAnnealingGreedy");
+      case 1 -> plot("simulatedAnnealing");
+      case 2 -> plot("hillClimbing");
       case 3 -> plot("tabooSearch");
     }
   }
