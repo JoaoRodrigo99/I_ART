@@ -47,13 +47,13 @@ class StreetRouting extends InputOutputHelper {
         c.setTime(getTotalTime());
 
       for (Car car : getFleet()) {
-        while (car.getTime() > 0) {
+        while (car.getTime() >= 0) {
           // Arbitrarily init the best available street to go through
           ArrayList<Street> availableStreets = car.getJunction().getStreets();
           Street bestStreet = availableStreets.get(getRandomGenerator().nextInt(availableStreets.size()));
 
           // Stop if time's up
-          if ((car.getTime() - bestStreet.getTime()) <= 0) break;
+          if ((car.getTime() - bestStreet.getTime()) < 0) break;
 
           car.reduceTime(bestStreet.getTime());
 
