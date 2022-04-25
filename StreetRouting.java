@@ -144,7 +144,7 @@ class StreetRouting extends InputOutputHelper {
   }
 
   @SuppressWarnings("unchecked")
-  public static void SimulatedAnnealing() throws IOException {
+  public static void SimulatedAnnealing() {
 
     //Reset temperatures.txt if exists
     ResetTempFile("temperatures.txt");
@@ -403,8 +403,7 @@ class StreetRouting extends InputOutputHelper {
 
     // System.out.println(totalPossPaths + " >=" + junctionsTaboo.size());
     if (totalPossPaths > 1000) totalPossPaths = 1000;
-    while (10 >= junctionsTaboo.size()) {
-
+    for (Car auxCar: (ArrayList<Car>) fleetTaboo.get(0).clone()) {
       // Create copies of the original solution
       ArrayList<Junction> junctionsAux = (ArrayList<Junction>) junctionsTaboo.get(junctionsTaboo.size()-1).clone();
       ArrayList<Street> streetsAux = (ArrayList<Street>) streetsTaboo.get(junctionsTaboo.size()-1).clone();
@@ -413,95 +412,83 @@ class StreetRouting extends InputOutputHelper {
       System.out.println("(Current) Distance Travelled: " + getDistanceTravelled());
       for (Street s : streetsAux) s.unVisit();
 
-      // Pick a random CAR
-      int car2Choose = getRandomGenerator().nextInt(fleetAux.size());
-      Car auxCar = fleetAux.get(car2Choose);
+      for (int junc2Choose = 0; junc2Choose < auxCar.getPath2().size() - 1; ++junc2Choose) {
+        if (!(junctionsAux.get(auxCar.getPath2().get(junc2Choose).getJunction()).getStreets().size() > 1)) continue;
 
-      // Pick a random JUNCTION
-      int junc2Choose = getRandomGenerator().nextInt(auxCar.getPath2().size());
+        // Repor valores do Carro desde a junction escolhido, isto é cortar o path depois dessa junction
+        List<SubPath> tempPathAux = auxCar.getPath2().subList(0, junc2Choose);
+        ArrayList<SubPath> tempPath = new ArrayList<>(tempPathAux);
 
-      // Checks if a change can be made in that junction, if not select another junction(the came after the randomly picked). If no junction can be changed, move to another car
-      while (true) {
-        if (junc2Choose > auxCar.getPath2().size() - 1) {
-          car2Choose = getRandomGenerator().nextInt(fleetAux.size());
-          auxCar = fleetAux.get(car2Choose);
-          junc2Choose = getRandomGenerator().nextInt(auxCar.getPath2().size());
+        // Set remaining time && and currentJunction
+        setCurrentTimeAndJunction(junctionsAux, auxCar, junc2Choose, tempPath);
+
+        //Form car new Path
+        while (auxCar.getTime() > 0) {
+          // Arbitrarily init the random available street to go through
+          ArrayList<Street> availableStreets = auxCar.getJunction().getStreets();
+          Street bestStreet = availableStreets.get(getRandomGenerator().nextInt(availableStreets.size()));
+          int maxStreetDistance = bestStreet.getDistance();
+          for (Street street: availableStreets) {
+            if (street.getDistance() > maxStreetDistance && !street.isVisited()) {
+              maxStreetDistance = street.getDistance();
+              bestStreet = street;
+            }
+          }
+
+          // Stop if time's up
+          if ((auxCar.getTime() - bestStreet.getTime()) < 0) break;
+
+          auxCar.reduceTime(bestStreet.getTime());
+
+          // If current car is located at junction 1, we should go to junction 2
+          // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
+          auxCar.setJunction(bestStreet.getJunction(1) == auxCar.getJunction() ? bestStreet.getJunction(2): bestStreet.getJunction(1));
+
+          //Add new junction to path
+          auxCar.getPath2().add(new SubPath(junctionsAux.indexOf(auxCar.getJunction()), auxCar.getTime()));
         }
 
-        // If the junction has another street than car can go another way
-        if (junctionsAux.get(auxCar.getPath2().get(junc2Choose).getJunction()).getStreets().size() > 1) break;
-        else {
-          junc2Choose++;
-        }
-      }
+        // Check for which streets were visited
+        visitedCheck(junctionsAux, streetsAux, fleetAux);
 
-      // Repor valores do Carro desde a junction escolhido, isto é cortar o path depois dessa junction
-      List<SubPath> tempPathAux = auxCar.getPath2().subList(0, junc2Choose);
-      ArrayList<SubPath> tempPath = new ArrayList<>(tempPathAux);
+        //COMPARAR CASOS
+        int candidateDistanceTravelled = 0;
+        for (Street street : streetsAux) candidateDistanceTravelled += street.isVisited() ? street.getDistance(): 0;
+        System.out.println("(neighboor) Distance traveled: " + candidateDistanceTravelled);
 
-      // Set remaining time && and currentJunction
-      setCurrentTimeAndJunction(junctionsAux, auxCar, junc2Choose, tempPath);
-
-      //Form car new Path
-      while (auxCar.getTime() > 0) {
-        // Arbitrarily init the random available street to go through
-        ArrayList<Street> availableStreets = auxCar.getJunction().getStreets();
-        Street bestStreet = availableStreets.get(getRandomGenerator().nextInt(availableStreets.size()));
-
-        // Stop if time's up
-        if ((auxCar.getTime() - bestStreet.getTime()) < 0) break;
-
-        auxCar.reduceTime(bestStreet.getTime());
-
-        // If current car is located at junction 1, we should go to junction 2
-        // Otherwise, go to junction 1 (it's implied that we are currently in junction 2)
-        auxCar.setJunction(bestStreet.getJunction(1) == auxCar.getJunction() ? bestStreet.getJunction(2): bestStreet.getJunction(1));
-
-        //Add new junction to path
-        auxCar.getPath2().add(new SubPath(junctionsAux.indexOf(auxCar.getJunction()), auxCar.getTime()));
-      }
-
-      // Check for which streets were visited
-      visitedCheck(junctionsAux, streetsAux, fleetAux);
-
-      //COMPARAR CASOS
-      int candidateDistanceTravelled = 0;
-      for (Street street : streetsAux) candidateDistanceTravelled += street.isVisited() ? street.getDistance(): 0;
-      System.out.println("(neighboor) Distance traveled: " + candidateDistanceTravelled);
-
-      boolean checkRepetition = fleetTaboo.stream().anyMatch(fleetTabooSingle -> fleetTabooSingle.equals(fleetAux) && randomGenerator.nextDouble(0.0, 1.0) > 0.99);
-      System.out.println(checkRepetition);
-      if (!checkRepetition && candidateDistanceTravelled >= getDistanceTravelled()) {
-        System.out.println("Was a better solution");
-        setDistanceTravelled(candidateDistanceTravelled);
-        getJunctions().clear();
-        getStreets().clear();
-        getFleet().clear();
-
-        ArrayList<Junction> toAddJ = (ArrayList<Junction>) junctionsAux.clone();
-        ArrayList<Street> toAddS = (ArrayList<Street>) streetsAux.clone();
-        ArrayList<Car> toAddC = (ArrayList<Car>) fleetAux.clone();
-
-        junctionsTaboo.add(toAddJ);
-        streetsTaboo.add(toAddS);
-        fleetTaboo.add(toAddC);
-      } else {
-        System.out.println("\nWorse Case ...");
-        if (candidateDistanceTravelled >= getDistanceTravelled() * 0.99) { //Probability hit - Assume worst case
-          System.out.println("PICKED WORST CASE\n");
+        boolean checkRepetition = fleetTaboo.stream().allMatch(fleetTabooSingle -> fleetTabooSingle.equals(fleetAux));
+        System.out.println(checkRepetition);
+        if (!checkRepetition && candidateDistanceTravelled >= getDistanceTravelled()) {
+          System.out.println("Was a better solution");
           setDistanceTravelled(candidateDistanceTravelled);
           getJunctions().clear();
           getStreets().clear();
           getFleet().clear();
 
-          junctionsTaboo.add((ArrayList<Junction>) junctionsAux.clone());
-          streetsTaboo.add((ArrayList<Street>) streetsAux.clone());
-          fleetTaboo.add((ArrayList<Car>) fleetAux.clone());
-        }
-      }
+          ArrayList<Junction> toAddJ = (ArrayList<Junction>) junctionsAux.clone();
+          ArrayList<Street> toAddS = (ArrayList<Street>) streetsAux.clone();
+          ArrayList<Car> toAddC = (ArrayList<Car>) fleetAux.clone();
 
-      // temperature -= 0.25;
-      System.out.println("-----------------------------------");
+          junctionsTaboo.add(toAddJ);
+          streetsTaboo.add(toAddS);
+          fleetTaboo.add(toAddC);
+        } else {
+          System.out.println("\nWorse Case ...");
+          if (candidateDistanceTravelled >= getDistanceTravelled()) { //Probability hit - Assume worst case
+            System.out.println("PICKED AN WORSE CASE BUT BETTER DISTANCE\n");
+            setDistanceTravelled(candidateDistanceTravelled);
+            getJunctions().clear();
+            getStreets().clear();
+            getFleet().clear();
+
+            junctionsTaboo.add((ArrayList<Junction>) junctionsAux.clone());
+            streetsTaboo.add((ArrayList<Street>) streetsAux.clone());
+            fleetTaboo.add((ArrayList<Car>) fleetAux.clone());
+          }
+        }
+
+        System.out.println("-----------------------------------");
+      }
     }
 
     double finalDistanceTravelled = 0;
