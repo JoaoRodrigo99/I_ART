@@ -406,9 +406,9 @@ class StreetRouting extends InputOutputHelper {
     while (10 >= junctionsTaboo.size()) {
 
       // Create copies of the original solution
-      ArrayList<Junction> junctionsAux = new ArrayList<>(junctionsTaboo.get(junctionsTaboo.size() - 1));
-      ArrayList<Street> streetsAux = new ArrayList<>(streetsTaboo.get(streetsTaboo.size() - 1));
-      ArrayList<Car> fleetAux = new ArrayList<>(fleetTaboo.get(fleetTaboo.size() - 1));
+      ArrayList<Junction> junctionsAux = (ArrayList<Junction>) junctionsTaboo.get(junctionsTaboo.size()-1).clone();
+      ArrayList<Street> streetsAux = (ArrayList<Street>) streetsTaboo.get(junctionsTaboo.size()-1).clone();
+      ArrayList<Car> fleetAux = (ArrayList<Car>) fleetTaboo.get(junctionsTaboo.size()-1).clone();
 
       System.out.println("(Current) Distance Travelled: " + getDistanceTravelled());
       for (Street s : streetsAux) s.unVisit();
@@ -469,36 +469,34 @@ class StreetRouting extends InputOutputHelper {
       for (Street street : streetsAux) candidateDistanceTravelled += street.isVisited() ? street.getDistance(): 0;
       System.out.println("(neighboor) Distance traveled: " + candidateDistanceTravelled);
 
-      boolean checkRepetition = isRepeated(fleetTaboo, fleetAux);
+      boolean checkRepetition = fleetTaboo.stream().anyMatch(fleetTabooSingle -> fleetTabooSingle.equals(fleetAux) && randomGenerator.nextDouble(0.0, 1.0) > 0.99);
       System.out.println(checkRepetition);
-      if (!checkRepetition) {
-        if (candidateDistanceTravelled >= getDistanceTravelled()) {
-          System.out.println("Was a better solution");
+      if (!checkRepetition && candidateDistanceTravelled >= getDistanceTravelled()) {
+        System.out.println("Was a better solution");
+        setDistanceTravelled(candidateDistanceTravelled);
+        getJunctions().clear();
+        getStreets().clear();
+        getFleet().clear();
+
+        ArrayList<Junction> toAddJ = (ArrayList<Junction>) junctionsAux.clone();
+        ArrayList<Street> toAddS = (ArrayList<Street>) streetsAux.clone();
+        ArrayList<Car> toAddC = (ArrayList<Car>) fleetAux.clone();
+
+        junctionsTaboo.add(toAddJ);
+        streetsTaboo.add(toAddS);
+        fleetTaboo.add(toAddC);
+      } else {
+        System.out.println("\nWorse Case ...");
+        if (candidateDistanceTravelled >= getDistanceTravelled() * 0.99) { //Probability hit - Assume worst case
+          System.out.println("PICKED WORST CASE\n");
           setDistanceTravelled(candidateDistanceTravelled);
           getJunctions().clear();
           getStreets().clear();
           getFleet().clear();
 
-          ArrayList<Junction> toAddJ = (ArrayList<Junction>) junctionsAux.clone();
-          ArrayList<Street> toAddS = (ArrayList<Street>) streetsAux.clone();
-          ArrayList<Car> toAddC = (ArrayList<Car>) fleetAux.clone();
-
-          junctionsTaboo.add(toAddJ);
-          streetsTaboo.add(toAddS);
-          fleetTaboo.add(toAddC);
-        } else {
-          System.out.println("\nWorse Case ...");
-          if (candidateDistanceTravelled >= getDistanceTravelled() * 0.9) { //Probability hit - Assume worst case
-            System.out.println("PICKED WORST CASE\n");
-            setDistanceTravelled(candidateDistanceTravelled);
-            getJunctions().clear();
-            getStreets().clear();
-            getFleet().clear();
-
-            junctionsTaboo.add((ArrayList<Junction>) junctionsAux.clone());
-            streetsTaboo.add((ArrayList<Street>) streetsAux.clone());
-            fleetTaboo.add((ArrayList<Car>) fleetAux.clone());
-          }
+          junctionsTaboo.add((ArrayList<Junction>) junctionsAux.clone());
+          streetsTaboo.add((ArrayList<Street>) streetsAux.clone());
+          fleetTaboo.add((ArrayList<Car>) fleetAux.clone());
         }
       }
 
@@ -546,39 +544,6 @@ class StreetRouting extends InputOutputHelper {
       return n;
     }
     return n * factorial(n - 1);
-  }
-
-  public static boolean isRepeated(ArrayList<ArrayList<Car>> fleetsList, ArrayList<Car> fleetIn) {
-    boolean[] isR = new boolean[20000];
-    boolean result = false;
-    int b = 0;
-    for (ArrayList<Car> singleFleet : fleetsList) {
-      isR[b] = true;
-      ++b;
-    }
-
-    b = 0;
-    for (ArrayList<Car> singleFleet : fleetsList) {
-      //Check fleets
-      for (int i = 0; i < singleFleet.size(); i++) {
-        if (singleFleet.get(i).getPath2().size() != fleetIn.get(i).getPath2().size()) isR[b] = false;
-        //Check paths
-        for (int p = 0; p < singleFleet.get(i).getPath2().size(); p++) {
-          if (singleFleet.get(i).getPath2().get(p).getJunction() != fleetIn.get(i).getPath2().get(p).getJunction()) {
-            isR[b] = false;
-          }
-        }
-      }
-      ++b;
-    }
-
-    b = 0;
-    for (ArrayList<Car> singleFleet : fleetsList) {
-      if (isR[b]) result = true;
-      ++b;
-    }
-
-    return result;
   }
 
   public static void setJunctionStreets() {
