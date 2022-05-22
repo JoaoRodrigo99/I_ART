@@ -23,7 +23,7 @@ class StreetRouting extends InputOutputHelper {
     while (true) {
 
       // Initializes config variables
-      readInput("input.txt");
+      readInput("newinput.txt");
 
       // Separate function to establish streets for each junction since there are unidirectional streets
       setJunctionStreets();
@@ -171,7 +171,7 @@ class StreetRouting extends InputOutputHelper {
         s.unVisit();
 
       //Pick a random CAR
-      int car2Choose = getRandomGenerator().nextInt(0, fleetAux.size());
+      int car2Choose = getRandomGenerator().nextInt( fleetAux.size());
       Car auxCar = fleetAux.get(car2Choose);
 
       //Pick a random JUNCTION
