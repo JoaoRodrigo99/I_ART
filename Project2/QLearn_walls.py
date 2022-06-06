@@ -285,3 +285,36 @@ print(qtable)
 print ("Score/time: " +  str(sum(rewards)/total_episodes))
 print(epsilon)
 print(np.argmax(qtable,axis=1).reshape(5,5))
+
+for episode in range(1):
+    m = make_test_maze()
+    state = m.state_for_agent(m.agent)
+    step = 0
+    done = False
+    print("****************************************************")
+    print("EPISODE ", episode)
+
+    for step in range(max_steps):
+        # Take the action (index) that have the maximum expected future reward given that state
+        action = np.argmax(qtable[state,:])
+        print(m.state_for_agent(m.agent), " Agent position : ", m.agent.j, " ", m.agent.i, "-act->", action)
+        # new_state, reward, done, info = env.step(action)
+        if action == 0:
+            reward = m.do_a_move(m.agent.vmove(-1))
+            new_state = m.state_for_agent(m.agent)
+        elif action == 1:
+            reward = m.do_a_move(m.agent.vmove(1))
+            new_state = m.state_for_agent(m.agent)
+        elif action == 2:
+            reward = m.do_a_move(m.agent.hmove(-1))
+            new_state = m.state_for_agent(m.agent)
+        elif action == 3:
+            reward = m.do_a_move(m.agent.hmove(1))
+            new_state = m.state_for_agent(m.agent)
+        
+        done = m.has_won()
+        if done:
+            break
+        state = new_state
+m = make_test_maze()
+m.visualize()

@@ -251,7 +251,7 @@ for episode in range(1):
     for step in range(max_steps):
         # Take the action (index) that have the maximum expected future reward given that state
         action = np.argmax(qtable[state,:])
-        print(m.state_for_agent(m.agent), " Agent position : ", m.agent.j, " ", m.agent.i)
+        print(m.state_for_agent(m.agent), " Agent position : ", m.agent.j, " ", m.agent.i, "-act->", action)
         # new_state, reward, done, info = env.step(action)
         if action == 0:
             reward = m.do_a_move(m.agent.vmove(-1))
@@ -265,10 +265,10 @@ for episode in range(1):
         elif action == 3:
             reward = m.do_a_move(m.agent.hmove(1))
             new_state = m.state_for_agent(m.agent)
-        # print(m.has_won)
+        
         done = m.has_won()
         if done:
             break
-
         state = new_state
-    
+m = make_test_maze()
+m.visualize()

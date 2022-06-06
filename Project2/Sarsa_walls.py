@@ -221,14 +221,8 @@ for episode in range(total_episodes):
     step = 0
     done = False
     total_rewards = 0
-    
-    for step in range(max_steps):
-#         print(f"start step...")
-        # Choose an action (a) in the current world state (s)
-        
-        
-#         print(f"exp_exp_tradeoff: {exp_exp_tradeoff}")
-        while True :
+
+    while True :
             # Shall we explore or exploit?
             exp_exp_tradeoff = random.uniform(0, 1)
 
@@ -246,6 +240,10 @@ for episode in range(total_episodes):
             # print(m.is_move_valid(action))
             if m.is_move_valid(action):
                 break
+    
+    for step in range(max_steps):
+#         print(f"start step...")
+        # Choose an action (a) in the current world state (s)
         
         
 #         print(f"action is {action}")
@@ -273,7 +271,25 @@ for episode in range(total_episodes):
         # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
         # qtable[new_state, :] : all the actions we can take from new state
 
-        qtable[state, action] = qtable[state, action] + learning_rate * (reward + gamma * qtable[new_state, action] - qtable[state, action])
+        # Choose valid move from new_state
+        # Choose valid move from new_state
+        while True:
+            # Shall we explore or exploit?
+            exp_exp_tradeoff = random.uniform(0, 1)
+
+            if exp_exp_tradeoff > epsilon:
+                new_action = np.argmax(qtable[new_state,:])
+
+                # Else doing a random choice --> exploration
+            else:
+                new_action = random.randint(0,3)
+
+                # new_action = random.randint(0,3)
+                # print("State/Action", new_state, "/", new_action)
+            if m.is_move_valid(new_action):
+                break
+
+        qtable[state, action] = qtable[state, action] + learning_rate * (reward + gamma * qtable[new_state, new_action] - qtable[state, action])
         # qtable[state, action] = qtable[state, action] + learning_rate * (reward + gamma * np.max(qtable[new_state, :]) - qtable[state, action])
         
 #         print(f'qtable: {qtable}')
@@ -284,7 +300,7 @@ for episode in range(total_episodes):
         
         # Our new state is state
         state = new_state
-        
+        action = new_action
 #         print(f'new state: {state}')
         
         # If done (if we're dead) : finish episode
@@ -333,3 +349,5 @@ for episode in range(1):
         if done:
             break
         state = new_state
+m = make_test_maze()
+m.visualize()
