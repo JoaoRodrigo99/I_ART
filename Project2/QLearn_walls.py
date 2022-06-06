@@ -146,7 +146,7 @@ class Maze:
     def do_a_move(self, a):
         assert self.is_valid_new_agent(a), "Agent cant go there"
         self.agent = a
-        return 10 if self.has_won() else -0.1
+        return 10 if self.has_won() else 0
 
     def has_won(self):
         a = self.agent
@@ -161,7 +161,8 @@ class Maze:
         
 def make_test_maze():
     m = Maze()
-    # e = m.env
+    e = m.env
+    e[0,4] = 1
     return m
 
 
@@ -250,8 +251,8 @@ for episode in range(total_episodes):
             reward = m.do_a_move(m.agent.hmove(1))
             new_state = m.state_for_agent(m.agent)
         # new_state = m.state_for_agent(m.do_a_move(m.agent.))
-        done = m.has_won
-#         print(f"new_state: {new_state}, reward: {reward}, done: {done}, info: {info}")
+        done = m.has_won()
+        # print(f"new_state: {new_state}, reward: {reward}, done: {done}")
 
         # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
         # qtable[new_state, :] : all the actions we can take from new state

@@ -84,7 +84,7 @@ class Maze:
     def do_a_move(self, a):
         assert self.is_valid_new_agent(a), "Agent cant go there"
         self.agent = a
-        return 1 if self.has_won() else -0.1
+        return 1 if self.has_won() else 0
 
     def has_won(self):
         a = self.agent
@@ -204,8 +204,8 @@ for episode in range(total_episodes):
             reward = m.do_a_move(m.agent.hmove(1))
             new_state = m.state_for_agent(m.agent)
         # new_state = m.state_for_agent(m.do_a_move(m.agent.))
-        done = m.has_won
-#         print(f"new_state: {new_state}, reward: {reward}, done: {done}, info: {info}")
+        done = m.has_won()
+        # print(f"new_state: {new_state}, reward: {reward}, done: {done}")
 
         # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
         # qtable[new_state, :] : all the actions we can take from new state
@@ -240,7 +240,7 @@ print(epsilon)
 print(np.argmax(qtable,axis=1).reshape(6,6))
 # print(np.argmax(qtable,axis=1).reshape(6,6))
 
-for episode in range(5):
+for episode in range(1):
     m = make_test_maze()
     state = m.state_for_agent(m.agent)
     step = 0
@@ -265,10 +265,10 @@ for episode in range(5):
         elif action == 3:
             reward = m.do_a_move(m.agent.hmove(1))
             new_state = m.state_for_agent(m.agent)
-        
-        done = m.has_won
+        # print(m.has_won)
+        done = m.has_won()
         if done:
             break
-        
+
         state = new_state
     
