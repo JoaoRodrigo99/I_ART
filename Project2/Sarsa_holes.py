@@ -133,7 +133,7 @@ print(qtable)
 total_episodes = 2000        # Total episodes
 max_steps = 100                # Max steps per episode
 
-learning_rate = 0.8           # Learning rate
+learning_rate = 0.8         # Learning rate
 gamma = 0.95                  # Discounting rate
 
 # Exploration parameters
@@ -220,16 +220,14 @@ for episode in range(total_episodes):
         while True:
             # Shall we explore or exploit?
             exp_exp_tradeoff = random.uniform(0, 1)
-
             if exp_exp_tradeoff > epsilon:
                 new_action = np.argmax(qtable[new_state,:])
 
-                # Else doing a random choice --> exploration
+            # Else doing a random choice --> exploration
             else:
                 new_action = random.randint(0,3)
 
-                # new_action = random.randint(0,3)
-                # print("State/Action", new_state, "/", new_action)
+            new_action = random.randint(0,3)    
             if m.is_move_valid(new_action):
                 break
 
